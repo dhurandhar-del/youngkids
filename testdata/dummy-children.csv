@@ -1,12 +1,12 @@
-firstName,nickname,className,age,language,grownUp1CalledBy,grownUp1FirstName,grownUp1Job,grownUp1JobSimple,grownUp2CalledBy,grownUp2FirstName,grownUp2Job,grownUp2JobSimple,likes,avoidTopics,parentConsent,consentVerifiedBy,cameraAllowed
-Aarav,Chintu,Class 2,7,Hinglish,Mummy,Priya,doctor,helps sick people get better,Papa,Rahul,engineer,builds bridges and roads,dinosaurs;cricket,,yes,Test Staff,yes
-Maya,,Class 1,6,English,Mama,Sara,teacher,helps children learn new things,,,,,drawing;butterflies,,yes,Test Staff,yes
-Mia,,Class 3,8,English,Mummy,Neha,pilot,flies big aeroplanes,Papa,Arjun,chef,cooks yummy food in a restaurant,space;pizza,,yes,Test Staff,yes
-Ishaan,Ishu,Class 2,7,Hindi,Mummy,Kavita,homemaker,takes care of the whole family and home,Papa,Vikram,farmer,grows rice and vegetables,tractors;kites,,yes,Test Staff,yes
-Shreya,,Class 3,8,English,Mummy,Anjali,police officer,keeps everyone safe,,,,,dance;cats,,yes,Test Staff,no
-Vihaan,,Class 1,6,Hinglish,Papa,Sanjay,bus driver,drives children to school,Dadi,,tailor,sews clothes,cars;mangoes,don't ask about mummy,yes,Test Staff,yes
-Zoya,,Class 2,7,English,Ammi,Farah,nurse,looks after sick people in hospital,Abbu,Imran,shopkeeper,sells things in his shop,cricket;rainbows,,yes,Test Staff,yes
-Kabir,Kabbu,Class 3,8,English,Mom,Ritu,software engineer,teaches computers what to do,Dad,Karan,photographer,takes pictures with a camera,robots;football,,yes,Test Staff,yes
-Ananya,Annu,Class 1,6,Hindi,Mummy,Pooja,bank cashier,counts money and keeps it safe,Nani,,retired teacher,used to teach children,dolls;ice cream,,yes,Test Staff,yes
-Rohan,,Class 2,7,English,Mummy,Meera,artist,paints beautiful pictures,,,,,drums;puppies,,yes,Test Staff,yes
-Aditya,Adi,Class 3,8,Hinglish,Papa,Manoj,army officer,protects our country,Mummy,Sunita,homemaker,takes care of the family,chess;aeroplanes,,yes,Test Staff,yes
+firstName,lastName,className,age,language,fatherName,fatherOccupation,fatherWork,motherName,motherOccupation,motherWork,car,favouriteColour,favouriteHolidayPlace,parentConsent,cameraAllowed
+Aarav,Sharma,Class 2,7,Hinglish,Rahul,Civil engineer,"Builds bridges and roads so cars and people can cross rivers. Checks that buildings are strong and safe.",Priya,Doctor,"Helps sick people get better at the city hospital. Listens to their heartbeat and gives medicine.",White Maruti Swift,Blue,Goa,yes,yes
+Maya,Iyer,Class 1,6,English,Arjun,Software developer,"Writes instructions for computers so apps on phones work. Fixes them when something goes wrong.",Sara,Teacher,"Teaches children to read and write at a primary school.",Grey Hyundai i20,Pink,Ooty,yes,yes
+Mia,Fernandes,3,8,English,Joseph,Pilot,"Flies big aeroplanes full of people to faraway cities. Checks the weather before every flight.",Anita,Nurse,"Takes care of patients in hospital. Checks their temperature and helps the doctor.",Red Kia Seltos,Purple,Kerala,yes,yes
+Ishaan,Gupta,Class 2,7,Hindi,Sanjay,Shopkeeper,"Runs a grocery shop. Sells rice, dal and biscuits and keeps count of money.",Kavita,Homemaker,"Takes care of the family and the house. Cooks tasty food and helps with homework.",Silver Wagon R,Yellow,Shimla,yes,yes
+Shreya,Nair,III,8,English,Vikram,Bank manager,"Helps people keep their money safe in the bank and gives loans to build houses.",Lakshmi,Scientist,"Does experiments in a lab to make new medicines.",Black Toyota Innova,Green,Munnar,yes,no
+Vihaan,Malhotra,Class 1,6,Hinglish,Rohit,Police officer,"Keeps people safe. Helps when there is trouble and makes sure everyone follows the rules.",Pooja,Lawyer,"Helps people in court when they have a problem and explains the rules to them.",White Mahindra Thar,Red,Manali,yes,yes
+Zoya,Khan,2nd,7,English,Imran,Architect,"Draws plans for new houses and buildings before they are built.",Sana,Dentist,"Looks after people's teeth. Cleans them and fixes the ones that hurt.",Blue Honda City,Orange,Jaipur,yes,yes
+Kabir,Singh,Class 3,8,English,Harpreet,Farmer,"Grows wheat and vegetables on a big field. Uses a tractor and waters the crops.",,,,Green tractor,Brown,Amritsar,yes,yes
+Ananya,Reddy,Class 1,6,Hindi,Srinivas,Chef,"Cooks food in a big restaurant kitchen and invents new dishes.",Divya,Fashion designer,"Draws and makes new clothes with beautiful colours and patterns.",,Sky blue,,yes,yes
+Rohan,Das,2,7,english,,,,Moumita,Journalist,"Finds out what is happening in the city and writes news stories for the newspaper.",No car,Black,Darjeeling,yes,yes
+Aditya,Joshi,Class 3,8,Hinglish,Nikhil,Electrician,"Fixes wires and lights in houses so fans and bulbs work safely.",Meera,Accountant,"Counts and checks money for a company so everything adds up.",Red Tata Nexon,Silver,Udaipur,yes,yes
