@@ -12,6 +12,7 @@ import { SessionConfigFactory } from '../realtime/sessionConfig';
 import { MintError, type KeyMinter } from '../realtime/keyMinter';
 import type { Moderator } from '../moderation/moderationService';
 import { SessionStatsSchema, type OpsLogger } from '../ops/opsLog';
+import type { BudgetLedger } from '../budget/budgetLedger';
 
 export interface AppDeps {
   config: AppConfig;
@@ -19,6 +20,7 @@ export interface AppDeps {
   minter: KeyMinter;
   moderator: Moderator;
   ops: OpsLogger;
+  budget?: BudgetLedger;
 }
 
 class HttpError extends Error {
@@ -44,7 +46,7 @@ function parse<T>(schema: z.ZodType<T>, body: unknown): T {
 }
 
 export function createApi(deps: AppDeps): express.Router {
-  const { config, roster, minter, moderator, ops } = deps;
+  const { config, roster, minter, moderator, ops, budget } = deps;
   const matcher = new NameMatcher();
   const prompts = new PromptBuilder({
     buddyName: config.buddyName,
@@ -85,6 +87,7 @@ export function createApi(deps: AppDeps): express.Router {
       orgName: config.orgName,
       hasApiKey: Boolean(config.openaiApiKey),
       pinRequired: Boolean(config.consolePin),
+      budget: budget?.enabled ? budget.summary() : null,
     };
     res.json(body);
   });
@@ -189,10 +192,17 @@ export function createApi(deps: AppDeps): express.Router {
       let names: string[];
       let instructions: string;
       if (playerName) {
-        // Self-serve: each laptop starts its own session with the typed name. The shared roster is not used.
-        expected = undefined;
-        names = [playerName];
-        instructions = prompts.buildInstructions({ rosterFirstNames: names, playerName });
+        // Self-serve: the typed name is matched against today's list (from the CSV). Only a clear match
+        // personalises the chat; otherwise Zuzu talks without any personal facts.
+        const match = matcher.match(playerName, roster.list());
+        expected = match.status === 'matched' ? match.child : undefined;
+        const playerProfile = expected ? PromptBuilder.toAiProfile(expected) : undefined;
+        names = [playerName, ...(expected ? [expected.firstName] : [])];
+        instructions = prompts.buildInstructions({
+          rosterFirstNames: names,
+          playerName: expected ? expected.firstName : playerName,
+          playerProfile,
+        });
       } else {
         const children = roster.list();
         expected = expectedChildId ? roster.get(expectedChildId) : children.find((c) => c.upNext);
@@ -204,7 +214,17 @@ export function createApi(deps: AppDeps): express.Router {
       }
       const hint = prompts.transcriptionHint(names);
       const sessionId = randomUUID();
-      const minted = await minter.mint(sessions.apiSession(instructions, hint), sessionId);
+      if (budget && !budget.canStart()) {
+        throw new HttpError(402, 'budget_exhausted', `The $${config.budgetUsd} OpenAI budget for this app is used up. Ask the organiser to raise it.`);
+      }
+      budget?.reserve(sessionId); // before the await, so parallel starts can't overshoot the cap
+      let minted: Awaited<ReturnType<typeof minter.mint>>;
+      try {
+        minted = await minter.mint(sessions.apiSession(instructions, hint), sessionId);
+      } catch (err) {
+        budget?.release(sessionId);
+        throw err;
+      }
       const body: SessionBootstrap = {
         sessionId,
         clientSecret: minted.value,
@@ -239,7 +259,9 @@ export function createApi(deps: AppDeps): express.Router {
 
   // ---- Anonymous ops log ----
   api.post('/ops/session', (req, res) => {
-    ops.append(parse(SessionStatsSchema, req.body));
+    const stats = parse(SessionStatsSchema, req.body);
+    ops.append(stats);
+    budget?.settle(stats.sessionId, stats.durationMs);
     res.status(204).end();
   });
 

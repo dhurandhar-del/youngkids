@@ -8,6 +8,7 @@ import { JsonRosterStore } from './roster/rosterStore';
 import { SessionKeyMinter } from './realtime/keyMinter';
 import { ModerationService } from './moderation/moderationService';
 import { OpsLogger } from './ops/opsLog';
+import { BudgetLedger } from './budget/budgetLedger';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const config = loadConfig();
@@ -36,6 +37,11 @@ app.use(
     minter: new SessionKeyMinter(config.openaiApiKey),
     moderator: new ModerationService(config.openaiApiKey),
     ops: new OpsLogger(join(dataDir, 'ops-log.jsonl')),
+    budget: new BudgetLedger(join(dataDir, 'budget.json'), {
+      limitUsd: config.budgetUsd,
+      sessionCostUsd: config.sessionCostUsd,
+      maxSessionSeconds: config.timings.maxSeconds,
+    }),
   }),
 );
 
@@ -62,6 +68,7 @@ app.listen(config.port, config.host, () => {
   console.log(servingFrontend ? `  Console: ${base}/console` : `  API: ${base}/api (frontend served separately)`);
   if (config.corsOrigins.length) console.log(`  CORS allowed for: ${config.corsOrigins.join(', ')}`);
   console.log(`  Model: ${config.realtimeModel} · voice: ${config.voice}`);
+  if (config.budgetUsd) console.log(`  Budget: $${config.budgetUsd} (about $${config.sessionCostUsd} per full session)`);
   if (!config.openaiApiKey) console.log('  ⚠  OPENAI_API_KEY is missing in .env');
   if (!config.zdrConfirmed) console.log('  ⚠  ZDR_CONFIRMED is not true: REHEARSAL MODE. Do not run sessions with real children.');
   console.log('');

@@ -127,6 +127,8 @@ export interface HealthResponse {
   orgName: string;
   hasApiKey: boolean;
   pinRequired: boolean;
+  /** App-wide OpenAI spending cap (estimated), or null when there is no cap. */
+  budget: { limitUsd: number; spentUsd: number; leftUsd: number; sessionsLeft: number } | null;
 }
 
 export interface ModerationVerdict {

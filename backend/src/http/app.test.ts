@@ -10,6 +10,7 @@ import { loadConfig } from '../config';
 import { JsonRosterStore } from '../roster/rosterStore';
 import { OpsLogger } from '../ops/opsLog';
 import type { KeyMinter } from '../realtime/keyMinter';
+import { BudgetLedger } from '../budget/budgetLedger';
 
 const childBody = {
   firstName: 'Aarav',
@@ -128,6 +129,15 @@ describe('HTTP API', () => {
     expect(boot.instructions).not.toContain('Children expected today include: Aarav');
   });
 
+  it('personalises a self-serve session when the typed name matches today\'s list', async () => {
+    const res = await post('/session', { playerName: 'arav' });
+    const boot = await res.json();
+    expect(boot.expectedChild).toMatchObject({ firstName: 'Aarav', cameraAllowed: true });
+    expect(boot.instructions).toContain('typed their name before starting: Aarav.');
+    expect(boot.instructions).toContain('"calledBy":"Mummy"');
+    expect(boot.instructions).not.toContain('verifiedBy');
+  });
+
   it('deletes all children only with explicit confirmation', async () => {
     const del = (body: unknown) =>
       fetch(base + '/children', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
@@ -155,6 +165,7 @@ describe('HTTP API with a console PIN', () => {
         minter: { mint: async () => ({ value: 'ek_test', expiresAt: 1 }) },
         moderator: { check: async () => ({ flagged: false, categories: [] }) },
         ops: new OpsLogger(join(dir, 'ops.jsonl')),
+        budget: new BudgetLedger(join(dir, 'budget.json'), { limitUsd: 1, sessionCostUsd: 0.6, maxSessionSeconds: 420 }),
       }),
     );
     server = app.listen(0);
@@ -165,6 +176,24 @@ describe('HTTP API with a console PIN', () => {
   afterAll(() => {
     server.close();
     rmSync(dir, { recursive: true, force: true });
+  });
+
+  it('stops minting sessions once the budget is used up, and frees it by actual length', async () => {
+    const start = () =>
+      fetch(base + '/session', { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-console-pin': '1234' }, body: '{}' });
+    const first = await (await start()).json();
+    const refused = await start();
+    expect(refused.status).toBe(402);
+    expect((await refused.json()).error.code).toBe('budget_exhausted');
+    const stats = {
+      sessionId: first.sessionId, model: 'm', durationMs: 84_000, endReason: 'completed', childTurns: 1, buddyTurns: 1, nudges: 0,
+      interventions: 0, identify: 'none', guardrailTrips: 0, alerts: 0, latencyMsP50: null, latencyMsP95: null, images: 0,
+    };
+    await fetch(base + '/ops/session', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'x-console-pin': '1234' }, body: JSON.stringify(stats),
+    });
+    expect((await (await fetch(base + '/health')).json()).budget).toMatchObject({ limitUsd: 1, spentUsd: 0.12 });
+    expect((await start()).status).toBe(200);
   });
 
   it('keeps health public so the app can tell "PIN needed" from "server down"', async () => {

@@ -100,6 +100,9 @@ export function PlayApp() {
           </>
         )}
         {error && <p className="play-error">{error}</p>}
+        {health?.budget && health.budget.sessionsLeft < 1 && (
+          <p className="play-error">{buddy}'s budget for today is used up. Ask the organiser.</p>
+        )}
         {offline && <p className="play-error">Can't reach {buddy}'s server right now. Check the internet and reload.</p>}
         <button className="primary play-go" type="submit" disabled={checking || offline}>
           {checking ? 'Checking…' : "Let's talk!"}

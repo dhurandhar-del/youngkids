@@ -35,6 +35,8 @@ const EnvSchema = z.object({
   CONSOLE_PIN: z.string().optional(),
   DATA_DIR: z.string().optional().default('data'),
   CORS_ORIGINS: z.string().optional().default(''),
+  BUDGET_USD: num(0, 0, 100000),
+  SESSION_COST_USD: num(0.6, 0.01, 100),
   SERVE_FRONTEND: bool,
 });
 
@@ -72,5 +74,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env) {
     dataDir: e.DATA_DIR,
     corsOrigins: e.CORS_ORIGINS.split(',').map((o) => o.trim().replace(/\/+$/, '')).filter(Boolean),
     serveFrontend: e.SERVE_FRONTEND,
+    budgetUsd: e.BUDGET_USD,
+    sessionCostUsd: e.SESSION_COST_USD,
   };
 }

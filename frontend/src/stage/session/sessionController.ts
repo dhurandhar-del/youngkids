@@ -298,9 +298,11 @@ export class SessionController {
       if (boot.expectedChild) this.expectedChildId = boot.expectedChild.id;
       this.cameraConsent = boot.expectedChild ? boot.expectedChild.cameraAllowed : null;
       if (player) {
-        // The player chose to start and allowed the camera in the browser on their own laptop.
-        this.cameraConsent = true;
-        this.store.set({ child: { firstName: player } });
+        // Matched on today's list: use that child's consent. Not on the list: the player chose to start and
+        // allowed the camera in the browser on their own laptop.
+        const known = boot.expectedChild;
+        this.cameraConsent = known ? known.cameraAllowed : true;
+        this.store.set({ child: known ? { id: known.id, firstName: known.firstName } : { firstName: player } });
       }
       if (boot.expectedChild && !boot.expectedChild.cameraAllowed && this.camera.on) {
         this.stopCamera();
@@ -379,7 +381,7 @@ export class SessionController {
               : 'Could not start the session';
       this.alert('danger', 'connection', `Could not start: ${msg}`);
       this.teardown('error', false);
-      this.store.set({ buddy: 'resting', expression: 'sleepy' });
+      this.store.set({ buddy: 'resting', expression: 'sleepy', ...(this.playerName ? { mediaError: msg } : {}) });
     }
   }
 
