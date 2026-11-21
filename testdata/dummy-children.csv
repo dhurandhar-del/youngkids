@@ -1,0 +1,12 @@
+firstName,nickname,className,age,language,grownUp1CalledBy,grownUp1FirstName,grownUp1Job,grownUp1JobSimple,grownUp2CalledBy,grownUp2FirstName,grownUp2Job,grownUp2JobSimple,likes,avoidTopics,parentConsent,consentVerifiedBy,cameraAllowed
+Aarav,Chintu,Class 2,7,Hinglish,Mummy,Priya,doctor,helps sick people get better,Papa,Rahul,engineer,builds bridges and roads,dinosaurs;cricket,,yes,Test Staff,yes
+Maya,,Class 1,6,English,Mama,Sara,teacher,helps children learn new things,,,,,drawing;butterflies,,yes,Test Staff,yes
+Mia,,Class 3,8,English,Mummy,Neha,pilot,flies big aeroplanes,Papa,Arjun,chef,cooks yummy food in a restaurant,space;pizza,,yes,Test Staff,yes
+Ishaan,Ishu,Class 2,7,Hindi,Mummy,Kavita,homemaker,takes care of the whole family and home,Papa,Vikram,farmer,grows rice and vegetables,tractors;kites,,yes,Test Staff,yes
+Shreya,,Class 3,8,English,Mummy,Anjali,police officer,keeps everyone safe,,,,,dance;cats,,yes,Test Staff,no
+Vihaan,,Class 1,6,Hinglish,Papa,Sanjay,bus driver,drives children to school,Dadi,,tailor,sews clothes,cars;mangoes,don't ask about mummy,yes,Test Staff,yes
+Zoya,,Class 2,7,English,Ammi,Farah,nurse,looks after sick people in hospital,Abbu,Imran,shopkeeper,sells things in his shop,cricket;rainbows,,yes,Test Staff,yes
+Kabir,Kabbu,Class 3,8,English,Mom,Ritu,software engineer,teaches computers what to do,Dad,Karan,photographer,takes pictures with a camera,robots;football,,yes,Test Staff,yes
+Ananya,Annu,Class 1,6,Hindi,Mummy,Pooja,bank cashier,counts money and keeps it safe,Nani,,retired teacher,used to teach children,dolls;ice cream,,yes,Test Staff,yes
+Rohan,,Class 2,7,English,Mummy,Meera,artist,paints beautiful pictures,,,,,drums;puppies,,yes,Test Staff,yes
+Aditya,Adi,Class 3,8,Hinglish,Papa,Manoj,army officer,protects our country,Mummy,Sunita,homemaker,takes care of the family,chess;aeroplanes,,yes,Test Staff,yes
