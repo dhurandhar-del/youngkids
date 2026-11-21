@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import type { HealthResponse } from '@zuzu/shared/types';
-import { api, hasPin, setPin } from '../shared/api';
+import { api, ApiError, hasPin, setPin } from '../shared/api';
 import { StageApp } from '../stage/StageApp';
 
 /**
@@ -24,7 +24,15 @@ export function PlayApp() {
       .then((h) => {
         setHealth(h);
         document.title = h.buddyName;
-        setNeedPin(h.pinRequired && !hasPin());
+        if (!h.pinRequired) return;
+        if (!hasPin()) return setNeedPin(true);
+        // A saved PIN may be out of date (PIN changed on the server): check it once and ask again if needed.
+        api.listChildren().catch((err) => {
+          if (err instanceof ApiError && err.code === 'pin_required') {
+            setPin(null);
+            setNeedPin(true);
+          }
+        });
       })
       .catch(() => setOffline(true));
   }, []);
