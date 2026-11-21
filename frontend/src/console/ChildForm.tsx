@@ -20,7 +20,7 @@ export function ChildForm({ initial, onSave, onCancel }: Props) {
   const findParent = (calledBy: string) => initial?.grownUps.find((g) => g.calledBy.toLowerCase() === calledBy);
   const [firstName, setFirstName] = useState(initial?.firstName ?? '');
   const [lastName, setLastName] = useState(initial?.lastName ?? '');
-  const [className, setClassName] = useState<ClassLevel>(initial?.className ?? 'Class 1');
+  const [className, setClassName] = useState<ClassLevel | ''>(initial?.className ?? '');
   const [age, setAge] = useState(initial?.age ? String(initial.age) : '');
   const [language, setLanguage] = useState<Language>(initial?.language ?? 'English');
   const [father, setFather] = useState<Parent>(fromGrownUp(findParent('papa') ?? initial?.grownUps[1]));
@@ -49,7 +49,7 @@ export function ChildForm({ initial, onSave, onCancel }: Props) {
       firstName,
       lastName: lastName || undefined,
       ...(initial?.nickname ? { nickname: initial.nickname } : {}),
-      className,
+      className: className || undefined,
       age: age ? Number(age) : undefined,
       language,
       grownUps: [toGrownUp('Papa', father), toGrownUp('Mummy', mother)].filter((g): g is GrownUp => g !== null),
@@ -109,8 +109,9 @@ export function ChildForm({ initial, onSave, onCancel }: Props) {
 
       <div className="row">
         <label>
-          Class *
-          <select value={className} onChange={(e) => setClassName(e.target.value as ClassLevel)}>
+          Class
+          <select value={className} onChange={(e) => setClassName(e.target.value as ClassLevel | '')}>
+            <option value="">Not given</option>
             {CLASS_LEVELS.map((c) => (
               <option key={c}>{c}</option>
             ))}
@@ -118,7 +119,7 @@ export function ChildForm({ initial, onSave, onCancel }: Props) {
         </label>
         <label>
           Age
-          <input type="number" min={5} max={9} value={age} onChange={(e) => setAge(e.target.value)} />
+          <input type="number" min={4} max={14} value={age} onChange={(e) => setAge(e.target.value)} />
         </label>
         <label>
           Language

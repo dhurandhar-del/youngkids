@@ -115,7 +115,7 @@ export function csvToChildren(text: string): { ok: ChildInput[]; errors: { row: 
       firstName: get('firstName'),
       lastName: get('lastName') || undefined,
       nickname: get('nickname') || undefined,
-      className: normalizeClass(get('className') || get('class')),
+      className: normalizeClass(get('className') || get('class')) || undefined,
       age: get('age').match(/\d+/)?.[0] || undefined,
       language: normalizeLanguage(get('language')),
       grownUps,

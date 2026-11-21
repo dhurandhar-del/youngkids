@@ -7,3 +7,5 @@ data/
 .DS_Store
 .vercel
 frontend/public/vendor/
+WhatsApp*/
+WhatsApp*.zip

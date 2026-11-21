@@ -118,7 +118,7 @@ export function createApi(deps: AppDeps): express.Router {
     const text = typeof req.body === 'string' ? req.body : '';
     const { ok, errors } = csvToChildren(text);
     // Skip children already on the list (same first name + class), e.g. when a file is imported twice.
-    const key = (c: { firstName: string; className: string }) => `${c.firstName.trim().toLowerCase()}|${c.className}`;
+    const key = (c: { firstName: string; className?: string }) => `${c.firstName.trim().toLowerCase()}|${c.className}`;
     const existing = new Set(roster.list().map(key));
     let created = 0;
     let duplicates = 0;

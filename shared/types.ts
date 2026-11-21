@@ -1,6 +1,6 @@
 // Types shared by the server and the web app.
 
-export const CLASS_LEVELS = ['Class 1', 'Class 2', 'Class 3'] as const;
+export const CLASS_LEVELS = ['Class 1', 'Class 2', 'Class 3', 'Class 4', 'Class 5', 'Class 6', 'Class 7', 'Class 8'] as const;
 export type ClassLevel = (typeof CLASS_LEVELS)[number];
 
 export const LANGUAGES = ['English', 'Hindi', 'Hinglish'] as const;
@@ -31,7 +31,8 @@ export interface ChildInput {
   /** Stays on the server: only used to tell apart children with the same first name. Never sent to OpenAI. */
   lastName?: string;
   nickname?: string;
-  className: ClassLevel;
+  /** Optional: paper forms sometimes leave it blank. */
+  className?: ClassLevel;
   age?: number;
   language: Language;
   /** Father ("Papa") and/or mother ("Mummy"). */

@@ -29,7 +29,7 @@ export function RosterList(p: Props) {
               {!c.consent.cameraAllowed && <span className="tag tag--warn">Voice only</span>}
             </div>
             <div className="roster-meta">
-              {c.className} · {c.language} · {c.grownUps.map((g) => `${g.calledBy}: ${g.job}`).join(' · ')}
+              {[c.className, c.language].filter(Boolean).join(' · ')} · {c.grownUps.map((g) => `${g.calledBy}: ${g.job}`).join(' · ')}
             </div>
           </div>
           <div className="roster-actions">

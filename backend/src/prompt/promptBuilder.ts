@@ -101,12 +101,12 @@ export class PromptBuilder {
 
   /** Minimise a roster entry to what the AI needs. This is the only child data sent to OpenAI. */
   static toAiProfile(child: ChildProfile): AiChildProfile {
-    const ageFromClass: Record<string, string> = { 'Class 1': '6', 'Class 2': '7', 'Class 3': '8' };
+    const classNo = Number(child.className?.match(/\d+/)?.[0]);
     return {
       firstName: child.firstName,
       ...(child.nickname ? { nickname: child.nickname } : {}),
-      className: child.className,
-      ageBand: child.age ? String(child.age) : ageFromClass[child.className] ?? '6-8',
+      className: child.className ?? 'not given',
+      ageBand: child.age ? String(child.age) : classNo ? String(classNo + 5) : '6-10',
       language: child.language,
       grownUps: child.grownUps.map((g) => ({
         calledBy: g.calledBy,
