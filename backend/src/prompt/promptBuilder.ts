@@ -30,6 +30,8 @@ export interface PromptConfig {
 export interface InstructionContext {
   rosterFirstNames: string[];
   expectedChild?: Pick<ChildProfile, 'firstName' | 'language'>;
+  /** Self-serve mode: the name the player typed on their own laptop before starting. */
+  playerName?: string;
 }
 
 export class PromptBuilder {
@@ -65,7 +67,13 @@ export class PromptBuilder {
     if (names.length) {
       today.push(`Children expected today include: ${names.join(', ')}. (First names only. Use this list only to hear names correctly.)`);
     }
-    if (ctx.expectedChild) {
+    if (ctx.playerName) {
+      today.push(
+        `The person in front of you typed their name before starting: ${ctx.playerName}. Use that name from the start. Do NOT ask their name and do NOT call identify_child, unless they clearly tell you a different name (then call identify_child with it).`,
+      );
+      today.push('There is no profile for them: do not invent personal facts. Ask what they like and use their answers.');
+      today.push('Say your very first hello in English. After that, always reply in the language they speak.');
+    } else if (ctx.expectedChild) {
       today.push(
         `The facilitator marked ${ctx.expectedChild.firstName} as up next, but a different child may come. Always ask their name, call identify_child, and use the name the child actually says.`,
       );

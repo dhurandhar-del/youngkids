@@ -119,6 +119,15 @@ describe('HTTP API', () => {
     expect(lines[0]).not.toContain('Aarav');
   });
 
+  it('starts a self-serve session from a typed name without using the roster', async () => {
+    const res = await post('/session', { playerName: '  Riya<script>  ' });
+    expect(res.status).toBe(200);
+    const boot = await res.json();
+    expect(boot.expectedChild).toBeUndefined();
+    expect(boot.instructions).toContain('typed their name before starting: Riyascript.');
+    expect(boot.instructions).not.toContain('Children expected today include: Aarav');
+  });
+
   it('deletes all children only with explicit confirmation', async () => {
     const del = (body: unknown) =>
       fetch(base + '/children', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
@@ -126,5 +135,55 @@ describe('HTTP API', () => {
     const ok = await (await del({ confirm: 'DELETE' })).json();
     expect(ok.deleted).toBeGreaterThan(0);
     expect(await (await fetch(base + '/children')).json()).toEqual([]);
+  });
+});
+
+describe('HTTP API with a console PIN', () => {
+  let server: Server;
+  let base: string;
+  let dir: string;
+
+  beforeAll(async () => {
+    dir = mkdtempSync(join(tmpdir(), 'zuzu-pin-'));
+    const config = loadConfig({ OPENAI_API_KEY: 'test', CONSOLE_PIN: '1234', CORS_ORIGINS: 'https://app.example' } as NodeJS.ProcessEnv);
+    const app = express();
+    app.use(
+      '/api',
+      createApi({
+        config,
+        roster: new JsonRosterStore(join(dir, 'roster.json')),
+        minter: { mint: async () => ({ value: 'ek_test', expiresAt: 1 }) },
+        moderator: { check: async () => ({ flagged: false, categories: [] }) },
+        ops: new OpsLogger(join(dir, 'ops.jsonl')),
+      }),
+    );
+    server = app.listen(0);
+    await new Promise((r) => server.once('listening', r));
+    base = `http://127.0.0.1:${(server.address() as AddressInfo).port}/api`;
+  });
+
+  afterAll(() => {
+    server.close();
+    rmSync(dir, { recursive: true, force: true });
+  });
+
+  it('keeps health public so the app can tell "PIN needed" from "server down"', async () => {
+    const res = await fetch(base + '/health');
+    expect(res.status).toBe(200);
+    expect((await res.json()).pinRequired).toBe(true);
+  });
+
+  it('requires the PIN for everything else', async () => {
+    expect((await fetch(base + '/children')).status).toBe(401);
+    expect((await fetch(base + '/children', { headers: { 'x-console-pin': '1234' } })).status).toBe(200);
+  });
+
+  it('answers CORS preflight for allowed origins only, without a PIN', async () => {
+    const pre = (origin: string) =>
+      fetch(base + '/session', { method: 'OPTIONS', headers: { Origin: origin, 'Access-Control-Request-Method': 'POST' } });
+    const ok = await pre('https://app.example');
+    expect(ok.status).toBe(204);
+    expect(ok.headers.get('access-control-allow-origin')).toBe('https://app.example');
+    expect((await pre('https://evil.example')).headers.get('access-control-allow-origin')).toBeNull();
   });
 });

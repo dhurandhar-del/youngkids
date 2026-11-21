@@ -614,3 +614,94 @@ html:has(.is-stage) {
   flex-direction: column;
   gap: 4px;
 }
+
+/* ---------- Self-serve: name screen and player controls ---------- */
+.play {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  user-select: auto;
+}
+.play-card {
+  position: relative;
+  width: min(440px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: var(--card);
+  border: 3px solid var(--ink);
+  border-radius: 28px;
+  padding: 28px 28px 22px;
+  box-shadow: 0 10px 0 rgba(31, 42, 68, 0.12);
+}
+.play-dot {
+  width: 64px;
+  height: 64px;
+  align-self: center;
+}
+.play-card h1 {
+  margin: 4px 0 6px;
+  text-align: center;
+  font-family: var(--font-kid);
+  font-size: 34px;
+  line-height: 1.1;
+}
+.play-card label {
+  font-family: var(--font-kid);
+  font-size: 22px;
+  font-weight: 700;
+}
+.play-card .play-pin-label {
+  font-size: 16px;
+}
+.play-card input {
+  font: inherit;
+  font-size: 22px;
+  padding: 12px 14px;
+  border: 2px solid var(--ink);
+  border-radius: 14px;
+  background: var(--cream);
+  color: var(--ink);
+  width: 100%;
+}
+.play-card input:focus {
+  outline: 3px solid var(--listening);
+  outline-offset: 2px;
+}
+.play-go {
+  margin-top: 6px;
+  font-family: var(--font-kid);
+  font-size: 24px;
+  padding: 12px 18px;
+}
+.play-error {
+  margin: 0;
+  color: var(--danger);
+  font-weight: 700;
+}
+.play-note {
+  margin: 4px 0 0;
+  font-size: 14px;
+  text-align: center;
+}
+.player-actions {
+  position: absolute;
+  left: 50%;
+  bottom: 6vh;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 12px;
+}
+.player-actions button {
+  font-family: var(--font-kid);
+  font-size: 22px;
+  padding: 10px 22px;
+}
+.player-stop {
+  position: absolute;
+  right: 16px;
+  bottom: 16px;
+  font-size: 16px;
+  opacity: 0.8;
+}

@@ -93,11 +93,14 @@ export class SessionController {
   private prefetch: { promise: Promise<SessionBootstrap>; at: number } | null = null;
   private profile: AiChildProfile | null = null;
   private expectedChildId: string | undefined;
+  /** Self-serve mode: the name typed on this laptop. No roster, no facilitator, no prefetch. */
+  private playerName: string | null = null;
   private cameraConsent: boolean | null = null; // null = unknown (no snapshots until known)
   private cameraOffForConsent = false; // camera stopped only because the current child has no camera consent
   private ending: EndReason | false = false;
   private startedAt = 0;
   private finishing = false;
+  private disposed = false;
   private pendingNotes: { text: string; reply: boolean }[] = [];
   private showtimeTimer: ReturnType<typeof setInterval> | null = null;
   private endTimer: ReturnType<typeof setTimeout> | null = null;
@@ -155,7 +158,9 @@ export class SessionController {
       .catch(() => undefined);
     const hasActivation = (navigator as Navigator & { userActivation?: { hasBeenActive: boolean } }).userActivation?.hasBeenActive;
     if (hasActivation) void this.activate();
+    this.disposed = false;
     return () => {
+      this.disposed = true;
       offBus();
       offVision();
       if (this.broadcastTimer) clearInterval(this.broadcastTimer);
@@ -181,6 +186,7 @@ export class SessionController {
   }
 
   private async startCamera(): Promise<void> {
+    if (this.disposed) return;
     try {
       await this.camera.start();
       this.store.set({ cameraOn: true, mediaError: null });
@@ -194,6 +200,11 @@ export class SessionController {
     this.vision.stop();
     this.camera.stop();
     this.store.set({ cameraOn: false });
+  }
+
+  setPlayer(name: string | null): void {
+    this.playerName = name;
+    this.prefetch = null;
   }
 
   // ---------------------------------------------------------------- commands
@@ -279,12 +290,18 @@ export class SessionController {
       });
       this.micMeter.attach(this.micStream);
 
-      const boot = await this.takeBootstrap(expectedChildId);
+      const player = this.playerName;
+      const boot = player ? await api.session(undefined, player) : await this.takeBootstrap(expectedChildId);
       this.bootstrap = boot;
       this.stats.sessionId = boot.sessionId;
       this.stats.model = boot.model;
       if (boot.expectedChild) this.expectedChildId = boot.expectedChild.id;
       this.cameraConsent = boot.expectedChild ? boot.expectedChild.cameraAllowed : null;
+      if (player) {
+        // The player chose to start and allowed the camera in the browser on their own laptop.
+        this.cameraConsent = true;
+        this.store.set({ child: { firstName: player } });
+      }
       if (boot.expectedChild && !boot.expectedChild.cameraAllowed && this.camera.on) {
         this.stopCamera();
         this.cameraOffForConsent = true;
@@ -298,8 +315,9 @@ export class SessionController {
         micStream: this.micStream,
         tools: createTools({
           currentChildName: () => this.store.get().child?.firstName ?? null,
-          identify: (name) => api.identify(name, this.expectedChildId),
-          onIdentified: (r, name) => this.onIdentified(r, name),
+          identify: (name) => (player ? Promise.resolve({ status: 'none' as const }) : api.identify(name, this.expectedChildId)),
+          onIdentified: (r, name) =>
+            player ? this.store.set({ child: { firstName: cleanName(name) }, activity: 'name' }) : this.onIdentified(r, name),
           setActivity: (a) => this.setActivity(a),
           textThisResponse: () => this.responseText,
           lookClosely: async () => this.snapshots.maybeSend('look', 'high'),
@@ -345,7 +363,9 @@ export class SessionController {
       });
       this.timekeeper.start();
       this.voice.addSystemNote(
-        'The child is now standing in front of you. Say hello warmly (no filler words), say in one short sentence that you are an AI, and ask their name.',
+        player
+          ? `${player} is now in front of you. Say hello warmly using their name (no filler words), say in one short sentence that you are an AI, and start with a fun question. Do not ask their name.`
+          : 'The child is now standing in front of you. Say hello warmly (no filler words), say in one short sentence that you are an AI, and ask their name.',
         true,
       );
     } catch (err) {
@@ -383,6 +403,7 @@ export class SessionController {
   }
 
   private prefetchBootstrap(): void {
+    if (this.playerName) return;
     if (this.prefetch && Date.now() - this.prefetch.at < 8 * 60_000) return;
     const promise = api.session(undefined);
     promise.catch(() => {

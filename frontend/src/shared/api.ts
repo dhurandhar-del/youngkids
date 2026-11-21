@@ -24,20 +24,32 @@ const API_BASE = (import.meta.env.VITE_API_URL ?? '').trim().replace(/\/+$/, '')
 
 const PIN_KEY = 'zuzu-console-pin';
 
-export function setPin(pin: string): void {
-  try {
-    sessionStorage.setItem(PIN_KEY, pin);
-  } catch {
-    /* storage unavailable */
+// Kept in localStorage so each laptop is asked for the PIN only once (sessionStorage as fallback).
+export function setPin(pin: string | null): void {
+  for (const store of [() => localStorage, () => sessionStorage]) {
+    try {
+      if (pin) store().setItem(PIN_KEY, pin);
+      else store().removeItem(PIN_KEY);
+    } catch {
+      /* storage unavailable */
+    }
   }
 }
 
+export function hasPin(): boolean {
+  return Boolean(pin());
+}
+
 function pin(): string | null {
-  try {
-    return sessionStorage.getItem(PIN_KEY);
-  } catch {
-    return null;
+  for (const store of [() => localStorage, () => sessionStorage]) {
+    try {
+      const v = store().getItem(PIN_KEY);
+      if (v) return v;
+    } catch {
+      /* storage unavailable */
+    }
   }
+  return null;
 }
 
 async function request<T>(method: string, path: string, body?: unknown, contentType = 'application/json'): Promise<T> {
@@ -70,7 +82,8 @@ export const api = {
   identify: (spokenName: string, expectedChildId?: string) =>
     request<IdentifyResponse>('POST', '/children/identify', { spokenName, expectedChildId }),
   aiProfile: (id: string) => request<AiChildProfile>('GET', `/children/${id}/ai-profile`),
-  session: (expectedChildId?: string) => request<SessionBootstrap>('POST', '/session', { expectedChildId }),
+  session: (expectedChildId?: string, playerName?: string) =>
+    request<SessionBootstrap>('POST', '/session', { expectedChildId, ...(playerName ? { playerName } : {}) }),
   moderate: (text: string, source: 'buddy' | 'child') => request<ModerationVerdict>('POST', '/moderate', { text, source }),
   logSession: (stats: SessionStats) => request<void>('POST', '/ops/session', stats),
 };

@@ -34,6 +34,13 @@ describe('PromptBuilder.buildInstructions', () => {
     expect(text).toContain('When we finish, the computer will forget our chat.');
   });
 
+  it('uses the typed name in self-serve mode and does not ask for it', () => {
+    const text = builder.buildInstructions({ rosterFirstNames: ['Riya'], playerName: 'Riya' });
+    expect(text).toContain('typed their name before starting: Riya');
+    expect(text).toContain('Do NOT ask their name');
+    expect(text).not.toContain('marked');
+  });
+
   it('includes first names only as hints, de-duplicated', () => {
     const text = builder.buildInstructions({ rosterFirstNames: ['Aarav', 'Maya', 'aarav'] });
     expect(text).toContain('Children expected today include: Aarav, Maya.');

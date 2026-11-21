@@ -7,13 +7,39 @@ import { Celebration } from './character/Celebration';
 
 const SKIP_KEYS: Record<string, Activity> = { '1': 'choices', '2': 'family', '3': 'show_and_tell', '4': 'what_is_ai' };
 
-export function StageApp() {
+/** Self-serve mode: the player typed their name on this laptop; Zuzu starts right away. */
+export interface PlayerProps {
+  name: string;
+  /** Called when the chat has finished (or the player wants to change the name). */
+  onDone(): void;
+}
+
+export function StageApp({ player }: { player?: PlayerProps } = {}) {
   const controller = useMemo(() => new SessionController(), []);
   const s = useStore(controller.store);
   const feed = useStore(controller.feed);
   const camHolder = useRef<HTMLDivElement>(null);
+  const hadSession = useRef(false);
 
   useEffect(() => controller.init(), [controller]);
+
+  // Player mode: start as soon as the Stage is up (the name form's click already unlocked audio).
+  useEffect(() => {
+    if (!player) return;
+    controller.setPlayer(player.name);
+    if (controller.store.get().needsActivation) void controller.activate();
+    void controller.handle({ kind: 'start' });
+  }, [controller, player?.name]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Player mode: back to the name screen once the goodbye celebration is over.
+  useEffect(() => {
+    if (!player) return;
+    if (s.inSession) hadSession.current = true;
+    else if (hadSession.current && !s.celebrating && s.buddy === 'sleeping') {
+      hadSession.current = false;
+      player.onDone();
+    }
+  }, [player, s.inSession, s.celebrating, s.buddy]);
 
   useEffect(() => {
     document.title = `${s.buddyName} · Stage`;
@@ -81,8 +107,22 @@ export function StageApp() {
         </div>
       </main>
 
-      {canStart && !s.needsActivation && (
+      {canStart && !s.needsActivation && !player && (
         <div className="stage-hint">Facilitator: press Space or click {s.buddyName} to start · ` for the transcript</div>
+      )}
+
+      {player && !s.inSession && !s.celebrating && s.buddy === 'resting' && (
+        <div className="player-actions">
+          <button className="primary" onClick={() => void controller.handle({ kind: 'start' })}>
+            Talk again
+          </button>
+          <button onClick={() => player.onDone()}>New player</button>
+        </div>
+      )}
+      {player && s.inSession && (
+        <button className="player-stop" onClick={() => controller.endGracefully()} title="Say goodbye and finish">
+          Finish
+        </button>
       )}
 
       <Celebration active={s.celebrating} name={s.badgeName} />

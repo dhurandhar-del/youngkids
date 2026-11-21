@@ -74,18 +74,7 @@ export function createApi(deps: AppDeps): express.Router {
   api.use(express.json({ limit: '200kb' }));
   api.use(express.text({ type: ['text/csv', 'text/plain'], limit: '1mb' }));
 
-  // Optional PIN (required when the server is exposed beyond localhost).
-  if (config.consolePin) {
-    const expected = Buffer.from(config.consolePin);
-    api.use((req, _res, next) => {
-      const got = Buffer.from(String(req.header('x-console-pin') ?? ''));
-      if (got.length !== expected.length || !timingSafeEqual(got, expected)) {
-        return next(new HttpError(401, 'pin_required', 'Console PIN required'));
-      }
-      next();
-    });
-  }
-
+  // Health is public (no child data) so the UI can tell "server down" from "PIN needed".
   api.get('/health', (_req, res) => {
     const body: HealthResponse = {
       ok: true,
@@ -99,6 +88,18 @@ export function createApi(deps: AppDeps): express.Router {
     };
     res.json(body);
   });
+
+  // Optional PIN (required when the server is exposed beyond localhost).
+  if (config.consolePin) {
+    const expected = Buffer.from(config.consolePin);
+    api.use((req, _res, next) => {
+      const got = Buffer.from(String(req.header('x-console-pin') ?? ''));
+      if (got.length !== expected.length || !timingSafeEqual(got, expected)) {
+        return next(new HttpError(401, 'pin_required', 'Console PIN required'));
+      }
+      next();
+    });
+  }
 
   // ---- Roster ----
   api.get('/children', (_req, res) => {
@@ -179,14 +180,28 @@ export function createApi(deps: AppDeps): express.Router {
   api.post(
     '/session',
     asyncRoute(async (req, res) => {
-      const { expectedChildId } = parse(z.object({ expectedChildId: z.string().max(64).optional() }), req.body ?? {});
-      const children = roster.list();
-      const expected = expectedChildId ? roster.get(expectedChildId) : children.find((c) => c.upNext);
-      const names = children.filter((c) => c.status === 'waiting' || c.upNext).flatMap((c) => [c.firstName, ...(c.nickname ? [c.nickname] : [])]);
-      const instructions = prompts.buildInstructions({
-        rosterFirstNames: names,
-        expectedChild: expected ? { firstName: expected.firstName, language: expected.language } : undefined,
-      });
+      const { expectedChildId, playerName: rawPlayer } = parse(
+        z.object({ expectedChildId: z.string().max(64).optional(), playerName: z.string().max(40).optional() }),
+        req.body ?? {},
+      );
+      const playerName = rawPlayer?.replace(/[^\p{L}\p{M}\s'.-]/gu, '').replace(/\s+/g, ' ').trim() || undefined;
+      let expected: ReturnType<typeof roster.get>;
+      let names: string[];
+      let instructions: string;
+      if (playerName) {
+        // Self-serve: each laptop starts its own session with the typed name. The shared roster is not used.
+        expected = undefined;
+        names = [playerName];
+        instructions = prompts.buildInstructions({ rosterFirstNames: names, playerName });
+      } else {
+        const children = roster.list();
+        expected = expectedChildId ? roster.get(expectedChildId) : children.find((c) => c.upNext);
+        names = children.filter((c) => c.status === 'waiting' || c.upNext).flatMap((c) => [c.firstName, ...(c.nickname ? [c.nickname] : [])]);
+        instructions = prompts.buildInstructions({
+          rosterFirstNames: names,
+          expectedChild: expected ? { firstName: expected.firstName, language: expected.language } : undefined,
+        });
+      }
       const hint = prompts.transcriptionHint(names);
       const sessionId = randomUUID();
       const minted = await minter.mint(sessions.apiSession(instructions, hint), sessionId);
