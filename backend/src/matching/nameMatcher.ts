@@ -5,6 +5,7 @@
 export interface MatchableChild {
   id: string;
   firstName: string;
+  lastName?: string;
   nickname?: string;
   className?: string;
   status: 'waiting' | 'done';
@@ -30,6 +31,8 @@ const AMBIGUOUS_THRESHOLD = 0.8;
 const MARGIN = 0.05;
 const EXPECTED_BONUS = 0.05;
 const DONE_PENALTY = 0.05;
+/** Typed/said last name matches: breaks ties between children with the same first name. */
+const LAST_NAME_BONUS = 0.06;
 
 const PHONETIC_RULES: [RegExp, string][] = [
   [/ph/g, 'f'],
@@ -140,7 +143,9 @@ export class NameMatcher {
         }
         if (child.id === expectedChildId) best += EXPECTED_BONUS;
         if (child.status === 'done') best -= DONE_PENALTY;
-        return { child, score: Math.min(1, best) };
+        let score = Math.min(1, best);
+        if (child.lastName && candidates.some((c) => NameMatcher.nameScore(c, child.lastName!) >= 0.92)) score += LAST_NAME_BONUS;
+        return { child, score };
       })
       .sort((x, y) => y.score - x.score);
 

@@ -1,59 +1,64 @@
 import { useState, type FormEvent } from 'react';
 import { CLASS_LEVELS, LANGUAGES, type ChildInput, type ChildProfile, type ClassLevel, type GrownUp, type Language } from '@zuzu/shared/types';
 
-const emptyGrownUp = (calledBy = ''): GrownUp => ({ calledBy, firstName: '', job: '', jobInSimpleWords: '' });
-
 interface Props {
   initial?: ChildProfile;
   onSave(input: ChildInput): Promise<void>;
   onCancel(): void;
 }
 
-/** Registration form (PRD FR-1–FR-3). Collects only what Zuzu needs; no surnames, schools or contact details. */
+interface Parent {
+  name: string;
+  occupation: string;
+  work: string;
+}
+
+const fromGrownUp = (g?: GrownUp): Parent => ({ name: g?.firstName ?? '', occupation: g?.job ?? '', work: g?.jobInSimpleWords ?? '' });
+
+/** Same fields as the paper form (docs/registration-form.pdf). Consent is taken in person when the session starts. */
 export function ChildForm({ initial, onSave, onCancel }: Props) {
+  const findParent = (calledBy: string) => initial?.grownUps.find((g) => g.calledBy.toLowerCase() === calledBy);
   const [firstName, setFirstName] = useState(initial?.firstName ?? '');
-  const [nickname, setNickname] = useState(initial?.nickname ?? '');
+  const [lastName, setLastName] = useState(initial?.lastName ?? '');
   const [className, setClassName] = useState<ClassLevel>(initial?.className ?? 'Class 1');
   const [age, setAge] = useState(initial?.age ? String(initial.age) : '');
   const [language, setLanguage] = useState<Language>(initial?.language ?? 'English');
-  const [grownUps, setGrownUps] = useState<GrownUp[]>(
-    initial?.grownUps?.length ? initial.grownUps.map((g) => ({ ...emptyGrownUp(), ...g })) : [emptyGrownUp('Mummy')],
-  );
-  const [likes, setLikes] = useState((initial?.likes ?? []).join(', '));
-  const [avoidTopics, setAvoidTopics] = useState(initial?.avoidTopics ?? '');
-  const [consent, setConsent] = useState(Boolean(initial?.consent?.parentConsent));
-  const [verifiedBy, setVerifiedBy] = useState(initial?.consent?.verifiedBy ?? '');
+  const [father, setFather] = useState<Parent>(fromGrownUp(findParent('papa') ?? initial?.grownUps[1]));
+  const [mother, setMother] = useState<Parent>(fromGrownUp(findParent('mummy') ?? initial?.grownUps[0]));
+  const [car, setCar] = useState(initial?.car ?? '');
+  const [colour, setColour] = useState(initial?.favouriteColour ?? '');
+  const [holiday, setHoliday] = useState(initial?.favouriteHolidayPlace ?? '');
   const [cameraAllowed, setCameraAllowed] = useState(initial?.consent?.cameraAllowed ?? true);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
-  const setGrownUp = (i: number, patch: Partial<GrownUp>) => setGrownUps((gs) => gs.map((g, j) => (j === i ? { ...g, ...patch } : g)));
+  const toGrownUp = (calledBy: string, p: Parent): GrownUp | null =>
+    p.name.trim() || p.occupation.trim() || p.work.trim()
+      ? {
+          calledBy,
+          firstName: p.name.trim() || undefined,
+          job: p.occupation.trim() || p.work.trim().split(/[.\n]/)[0].slice(0, 80) || 'not given',
+          jobInSimpleWords: p.work.trim() || undefined,
+        }
+      : null;
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
     setError(null);
-    if (!consent) return setError('Parent consent is required before a child can take part.');
     const input = {
       firstName,
-      nickname: nickname || undefined,
+      lastName: lastName || undefined,
+      ...(initial?.nickname ? { nickname: initial.nickname } : {}),
       className,
       age: age ? Number(age) : undefined,
       language,
-      grownUps: grownUps
-        .filter((g) => g.calledBy.trim() || g.job.trim())
-        .map((g) => ({
-          calledBy: g.calledBy,
-          firstName: g.firstName || undefined,
-          job: g.job,
-          jobInSimpleWords: g.jobInSimpleWords || undefined,
-        })),
-      likes: likes
-        .split(',')
-        .map((s) => s.trim())
-        .filter(Boolean)
-        .slice(0, 3),
-      avoidTopics: avoidTopics || undefined,
-      consent: { parentConsent: true as const, verifiedBy, cameraAllowed, noticeVersion: 'v1' },
+      grownUps: [toGrownUp('Papa', father), toGrownUp('Mummy', mother)].filter((g): g is GrownUp => g !== null),
+      likes: initial?.likes ?? [],
+      ...(initial?.avoidTopics ? { avoidTopics: initial.avoidTopics } : {}),
+      car: car || undefined,
+      favouriteColour: colour || undefined,
+      favouriteHolidayPlace: holiday || undefined,
+      consent: { parentConsent: true as const, cameraAllowed },
     } satisfies ChildInput;
     setSaving(true);
     try {
@@ -65,6 +70,28 @@ export function ChildForm({ initial, onSave, onCancel }: Props) {
     }
   };
 
+  const parentFields = (label: string, p: Parent, set: (p: Parent) => void) => (
+    <fieldset>
+      <legend>{label}</legend>
+      <div className="row">
+        <label>
+          Name
+          <input value={p.name} onChange={(e) => set({ ...p, name: e.target.value })} maxLength={40} />
+        </label>
+        <label>
+          Occupation
+          <input value={p.occupation} onChange={(e) => set({ ...p, occupation: e.target.value })} placeholder="e.g. doctor" maxLength={80} />
+        </label>
+      </div>
+      <div className="row">
+        <label className="grow">
+          What does {label === "Father's details" ? 'he' : 'she'} do? (up to 3 lines)
+          <textarea rows={3} value={p.work} onChange={(e) => set({ ...p, work: e.target.value })} maxLength={400} />
+        </label>
+      </div>
+    </fieldset>
+  );
+
   return (
     <form className="card form" onSubmit={submit}>
       <h3>{initial ? `Edit ${initial.firstName}` : 'Add a child'}</h3>
@@ -75,8 +102,8 @@ export function ChildForm({ initial, onSave, onCancel }: Props) {
           <input value={firstName} onChange={(e) => setFirstName(e.target.value)} required maxLength={40} autoFocus />
         </label>
         <label>
-          Pet name (optional)
-          <input value={nickname} onChange={(e) => setNickname(e.target.value)} maxLength={40} placeholder="e.g. Chintu" />
+          Last name
+          <input value={lastName} onChange={(e) => setLastName(e.target.value)} maxLength={40} />
         </label>
       </div>
 
@@ -103,75 +130,28 @@ export function ChildForm({ initial, onSave, onCancel }: Props) {
         </label>
       </div>
 
-      <fieldset>
-        <legend>Grown-ups (what Zuzu can talk about)</legend>
-        {grownUps.map((g, i) => (
-          <div className="row" key={i}>
-            <label>
-              Child calls them *
-              <input value={g.calledBy} onChange={(e) => setGrownUp(i, { calledBy: e.target.value })} placeholder="Mummy / Papa / Nani" maxLength={20} />
-            </label>
-            <label>
-              First name
-              <input value={g.firstName ?? ''} onChange={(e) => setGrownUp(i, { firstName: e.target.value })} maxLength={40} />
-            </label>
-            <label>
-              Job *
-              <input value={g.job} onChange={(e) => setGrownUp(i, { job: e.target.value })} placeholder="doctor" maxLength={60} />
-            </label>
-            <label className="grow">
-              Job in kid words
-              <input
-                value={g.jobInSimpleWords ?? ''}
-                onChange={(e) => setGrownUp(i, { jobInSimpleWords: e.target.value })}
-                placeholder="helps sick people get better"
-                maxLength={80}
-              />
-            </label>
-            {grownUps.length > 1 && (
-              <button type="button" className="ghost" onClick={() => setGrownUps((gs) => gs.filter((_, j) => j !== i))} aria-label="Remove grown-up">
-                ✕
-              </button>
-            )}
-          </div>
-        ))}
-        {grownUps.length < 2 && (
-          <button type="button" className="ghost" onClick={() => setGrownUps((gs) => [...gs, emptyGrownUp('Papa')])}>
-            + Add another grown-up
-          </button>
-        )}
-      </fieldset>
+      {parentFields("Father's details", father, setFather)}
+      {parentFields("Mother's details", mother, setMother)}
 
       <div className="row">
-        <label className="grow">
-          Likes (up to 3, comma separated)
-          <input value={likes} onChange={(e) => setLikes(e.target.value)} placeholder="dinosaurs, cricket, drawing" />
+        <label>
+          Which car do you have?
+          <input value={car} onChange={(e) => setCar(e.target.value)} placeholder="e.g. white Swift" maxLength={60} />
         </label>
-      </div>
-      <div className="row">
-        <label className="grow">
-          Topics Zuzu must NOT bring up (optional, kept short and neutral)
-          <input value={avoidTopics} onChange={(e) => setAvoidTopics(e.target.value)} placeholder="e.g. don't ask about grandfather" maxLength={200} />
+        <label>
+          Favourite colour
+          <input value={colour} onChange={(e) => setColour(e.target.value)} maxLength={30} />
+        </label>
+        <label>
+          Favourite holiday place
+          <input value={holiday} onChange={(e) => setHoliday(e.target.value)} placeholder="e.g. Goa" maxLength={60} />
         </label>
       </div>
 
-      <fieldset className="consent">
-        <legend>Consent</legend>
-        <label className="check">
-          <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} />
-          A parent/guardian signed the consent form and I checked who they are
-        </label>
-        <div className="row">
-          <label>
-            Checked by (staff name) *
-            <input value={verifiedBy} onChange={(e) => setVerifiedBy(e.target.value)} maxLength={60} required />
-          </label>
-          <label className="check">
-            <input type="checkbox" checked={cameraAllowed} onChange={(e) => setCameraAllowed(e.target.checked)} />
-            Camera allowed (untick for voice-only)
-          </label>
-        </div>
-      </fieldset>
+      <label className="check">
+        <input type="checkbox" checked={cameraAllowed} onChange={(e) => setCameraAllowed(e.target.checked)} />
+        Camera allowed (untick for voice-only)
+      </label>
 
       {error && <div className="error">{error}</div>}
       <div className="actions">

@@ -92,3 +92,11 @@ describe('NameMatcher.similarity', () => {
     expect(NameMatcher.similarity('aarav', 'rohan')).toBeLessThan(0.7);
   });
 });
+
+describe('NameMatcher with last names', () => {
+  it('uses a typed last name to pick between two children with the same first name', () => {
+    const twins = [kid('1', 'Aarav', { lastName: 'Sharma', className: 'Class 1' }), kid('2', 'Aarav', { lastName: 'Mehta', className: 'Class 2' })];
+    expect(matcher.match('Aarav Mehta', twins)).toMatchObject({ status: 'matched', child: { id: '2' } });
+    expect(matcher.match('Aarav', twins).status).toBe('ambiguous');
+  });
+});

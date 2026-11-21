@@ -1,3 +1,3 @@
-firstName,nickname,className,age,language,grownUp1CalledBy,grownUp1FirstName,grownUp1Job,grownUp1JobSimple,grownUp2CalledBy,grownUp2FirstName,grownUp2Job,grownUp2JobSimple,likes,avoidTopics,parentConsent,consentVerifiedBy,cameraAllowed
-Aarav,Chintu,Class 2,7,Hinglish,Mummy,Priya,doctor,helps sick people get better,Papa,Rahul,engineer,builds bridges and roads,dinosaurs;cricket,,yes,Asha,yes
-Maya,,Class 1,6,English,Mama,,teacher,helps children learn,,,,,drawing,,yes,Asha,no
+firstName,lastName,className,age,language,fatherName,fatherOccupation,fatherWork,motherName,motherOccupation,motherWork,car,favouriteColour,favouriteHolidayPlace,parentConsent,cameraAllowed
+Aarav,Sharma,Class 2,7,Hinglish,Rahul,Civil engineer,"Builds bridges and roads so cars and people can cross rivers. Checks that buildings are strong and safe.",Priya,Doctor,"Helps sick people get better at the city hospital.",White Maruti Swift,Blue,Goa,yes,yes
+Maya,Iyer,Class 1,6,English,,,,Sara,Teacher,"Teaches children to read and write at a primary school.",,Pink,Ooty,yes,no

@@ -116,6 +116,9 @@ export class PromptBuilder {
       })),
       likes: child.likes,
       ...(child.avoidTopics ? { avoidTopics: child.avoidTopics } : {}),
+      ...(child.car ? { car: child.car } : {}),
+      ...(child.favouriteColour ? { favouriteColour: child.favouriteColour } : {}),
+      ...(child.favouriteHolidayPlace ? { favouriteHolidayPlace: child.favouriteHolidayPlace } : {}),
       cameraAllowed: child.consent.cameraAllowed,
       usage:
         'Use these facts naturally in examples and questions, one at a time. Do not say where they came from (no "I heard..."): the helper explains that after the chat.',

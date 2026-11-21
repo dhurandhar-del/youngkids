@@ -24,7 +24,7 @@ npm start                                 # builds the frontend and serves every
 ```
 
 1. Open **http://localhost:8787/console**.
-2. Add children (form, or **Import CSV** using [docs/children-template.csv](docs/children-template.csv)).
+2. Add children (form, or **Import CSV** using [docs/children-template.csv](docs/children-template.csv)). Parents can fill the printable [docs/registration-form.pdf](docs/registration-form.pdf); its fields are in the same order as the CSV columns.
 3. Click **Open Stage** and move that window to the TV or projector (F11 for full screen). Click once on the Stage to turn on its speaker and camera, and allow camera and mic when Chrome asks.
 4. Mark a child **Up next** → ask the child if they want to talk to the computer helper → press **▶ Start**.
 

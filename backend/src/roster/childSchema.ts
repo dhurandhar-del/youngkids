@@ -10,25 +10,32 @@ const optionalText = (max: number) =>
 export const GrownUpSchema = z.object({
   calledBy: trimmed(20).min(1, 'What does the child call this grown-up?'),
   firstName: optionalText(40),
-  job: trimmed(60).min(1, 'Job is required'),
-  jobInSimpleWords: optionalText(80),
+  job: trimmed(80).min(1, 'Occupation is required'),
+  jobInSimpleWords: optionalText(400),
 });
 
 export const ChildInputSchema = z.object({
   firstName: trimmed(40).min(1, 'First name is required'),
+  lastName: optionalText(40),
   nickname: optionalText(40),
   className: z.enum(CLASS_LEVELS),
   age: z.coerce.number().int().min(5).max(9).optional(),
   language: z.enum(LANGUAGES).default('English'),
-  grownUps: z.array(GrownUpSchema).min(1, 'Add at least one grown-up').max(2),
+  grownUps: z.array(GrownUpSchema).max(2).default([]),
   likes: z.array(trimmed(40).min(1)).max(3).default([]),
   avoidTopics: optionalText(200),
-  consent: z.object({
-    parentConsent: z.literal(true, { error: 'Parent consent is required before a child can take part' }),
-    verifiedBy: trimmed(60).min(1, 'Who checked the consent form?'),
-    cameraAllowed: z.boolean(),
-    noticeVersion: optionalText(20),
-  }),
+  car: optionalText(60),
+  favouriteColour: optionalText(30),
+  favouriteHolidayPlace: optionalText(60),
+  // Consent is taken in person when the session starts, so it defaults to given. An explicit "no" excludes the child.
+  consent: z
+    .object({
+      parentConsent: z.literal(true, { error: 'Parent consent is marked "no" for this child' }),
+      verifiedBy: optionalText(60),
+      cameraAllowed: z.boolean().default(true),
+      noticeVersion: optionalText(20),
+    })
+    .default({ parentConsent: true, cameraAllowed: true, verifiedBy: undefined, noticeVersion: undefined }),
 }) satisfies z.ZodType<ChildInput, unknown>;
 
 export const ChildPatchSchema = z.object({

@@ -13,27 +13,35 @@ export interface GrownUp {
   calledBy: string;
   firstName?: string;
   job: string;
-  /** Optional one-liner a 6-year-old understands: "helps sick people get better" */
+  /** What they do at work, in a few simple lines: "helps sick people get better" */
   jobInSimpleWords?: string;
 }
 
 export interface Consent {
+  /** Taken in person when the session starts; a CSV row can still say "no" to exclude a child. */
   parentConsent: true;
-  /** Staff member who checked the consent form and the adult's identity */
-  verifiedBy: string;
+  /** Optional: staff member who took the consent */
+  verifiedBy?: string;
   cameraAllowed: boolean;
   noticeVersion?: string;
 }
 
 export interface ChildInput {
   firstName: string;
+  /** Stays on the server: only used to tell apart children with the same first name. Never sent to OpenAI. */
+  lastName?: string;
   nickname?: string;
   className: ClassLevel;
   age?: number;
   language: Language;
+  /** Father ("Papa") and/or mother ("Mummy"). */
   grownUps: GrownUp[];
   likes: string[];
   avoidTopics?: string;
+  /** Family car, e.g. "white Maruti Swift" */
+  car?: string;
+  favouriteColour?: string;
+  favouriteHolidayPlace?: string;
   consent: Consent;
 }
 
@@ -54,6 +62,9 @@ export interface AiChildProfile {
   grownUps: { calledBy: string; firstName?: string; job: string; jobInSimpleWords?: string }[];
   likes: string[];
   avoidTopics?: string;
+  car?: string;
+  favouriteColour?: string;
+  favouriteHolidayPlace?: string;
   cameraAllowed: boolean;
   usage: string;
 }
