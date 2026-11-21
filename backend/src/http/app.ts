@@ -189,6 +189,7 @@ export function createApi(deps: AppDeps): express.Router {
       );
       const playerName = rawPlayer?.replace(/[^\p{L}\p{M}\s'.-]/gu, '').replace(/\s+/g, ' ').trim() || undefined;
       let expected: ReturnType<typeof roster.get>;
+      let playerProfile: ReturnType<typeof PromptBuilder.toAiProfile> | undefined;
       let names: string[];
       let instructions: string;
       if (playerName) {
@@ -196,7 +197,7 @@ export function createApi(deps: AppDeps): express.Router {
         // personalises the chat; otherwise Zuzu talks without any personal facts.
         const match = matcher.match(playerName, roster.list());
         expected = match.status === 'matched' ? match.child : undefined;
-        const playerProfile = expected ? PromptBuilder.toAiProfile(expected) : undefined;
+        playerProfile = expected ? PromptBuilder.toAiProfile(expected) : undefined;
         names = [playerName, ...(expected ? [expected.firstName] : [])];
         instructions = prompts.buildInstructions({
           rosterFirstNames: names,
@@ -238,6 +239,7 @@ export function createApi(deps: AppDeps): express.Router {
         ...(expected
           ? { expectedChild: { id: expected.id, firstName: expected.firstName, cameraAllowed: expected.consent.cameraAllowed } }
           : {}),
+        ...(playerProfile ? { profile: playerProfile } : {}),
       };
       res.set('Cache-Control', 'no-store').json(body);
     }),

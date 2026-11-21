@@ -128,6 +128,8 @@ export interface SessionBootstrap {
   buddyName: string;
   zdrConfirmed: boolean;
   expectedChild?: { id: string; firstName: string; cameraAllowed: boolean };
+  /** Self-serve mode: the matched child's minimal profile, so the Stage can remind Zuzu of it during the chat. */
+  profile?: AiChildProfile;
 }
 
 export interface HealthResponse {

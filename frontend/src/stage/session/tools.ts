@@ -8,6 +8,8 @@ export interface ToolDeps {
   identify(spokenName: string): Promise<IdentifyResponse>;
   onIdentified(result: IdentifyResponse, spokenName: string): void;
   setActivity(activity: Activity): void;
+  /** This child's details that fit the part of the chat that just started (from the CSV), if any. */
+  activityHint?(activity: Activity): string | null;
   /** What Zuzu has said so far in the current model response. */
   textThisResponse(): string;
   lookClosely(): Promise<boolean>;
@@ -46,7 +48,7 @@ export function createTools(deps: ToolDeps) {
       // A background result doesn't give the model another turn. That's right when Zuzu already asked
       // its question in this response. If it called set_activity first, or only announced the activity
       // ("Let's play a game!"), the child would be left waiting, so give the turn back.
-      return setActivityResult(deps.textThisResponse());
+      return setActivityResult(deps.textThisResponse(), deps.activityHint?.(activity) ?? null);
     },
   });
 
@@ -115,11 +117,13 @@ export function toModelResult(
   };
 }
 
-export function setActivityResult(textSoFar: string) {
-  if (textSoFar.includes('?')) return backgroundResult('ok');
+export function setActivityResult(textSoFar: string, hint: string | null = null) {
+  const extra = hint ? ` ${hint}` : '';
+  // Already asked a question: don't take another turn, but keep the hint in context for the next reply.
+  if (textSoFar.includes('?')) return backgroundResult(`ok.${extra}`);
   return textSoFar.trim()
-    ? 'ok. Now continue straight into the game or question for this part, in one or two short sentences. Do not repeat what you just said.'
-    : 'ok. Now say your line for this part (no preamble).';
+    ? `ok. Now continue straight into the game or question for this part, in one or two short sentences. Do not repeat what you just said.${extra}`
+    : `ok. Now say your line for this part (no preamble).${extra}`;
 }
 
 /** Tells the model to drop the previous child's details when the name changes mid-session. */

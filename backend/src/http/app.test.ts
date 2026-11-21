@@ -136,6 +136,8 @@ describe('HTTP API', () => {
     expect(boot.instructions).toContain('typed their name before starting: Aarav.');
     expect(boot.instructions).toContain('"calledBy":"Mummy"');
     expect(boot.instructions).not.toContain('verifiedBy');
+    expect(boot.profile).toMatchObject({ firstName: 'Aarav', grownUps: [{ calledBy: 'Mummy', job: 'doctor' }] });
+    expect(boot.profile).not.toHaveProperty('lastName');
   });
 
   it('deletes all children only with explicit confirmation', async () => {

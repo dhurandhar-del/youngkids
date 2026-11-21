@@ -25,6 +25,7 @@ import { moodFromText } from './moodFromText';
 import { RepairCoordinator } from './repairCoordinator';
 import { Timekeeper } from './timekeeper';
 import { createTools, switchNote } from './tools';
+import { hintForActivity, openingPlan } from './profileHints';
 import { RealtimeVoiceClient } from './voiceClient';
 
 export interface StageState {
@@ -303,6 +304,7 @@ export class SessionController {
         const known = boot.expectedChild;
         this.cameraConsent = known ? known.cameraAllowed : true;
         this.store.set({ child: known ? { id: known.id, firstName: known.firstName } : { firstName: player } });
+        this.profile = boot.profile ?? null;
       }
       if (boot.expectedChild && !boot.expectedChild.cameraAllowed && this.camera.on) {
         this.stopCamera();
@@ -321,6 +323,7 @@ export class SessionController {
           onIdentified: (r, name) =>
             player ? this.store.set({ child: { firstName: cleanName(name) }, activity: 'name' }) : this.onIdentified(r, name),
           setActivity: (a) => this.setActivity(a),
+          activityHint: (a) => (this.profile ? hintForActivity(a, this.profile) : null),
           textThisResponse: () => this.responseText,
           lookClosely: async () => this.snapshots.maybeSend('look', 'high'),
           askForHelp: (reason, note) => this.onHelpRequested(reason, note),
@@ -366,7 +369,9 @@ export class SessionController {
       this.timekeeper.start();
       this.voice.addSystemNote(
         player
-          ? `${player} is now in front of you. Say hello warmly using their name (no filler words), say in one short sentence that you are an AI, and start with a fun question. Do not ask their name.`
+          ? `${this.store.get().child?.firstName ?? player} is now in front of you. Say hello warmly using their name (no filler words), say in one short sentence that you are an AI, and start with a fun question${
+              this.profile ? ' linked to one of their details' : ''
+            }. Do not ask their name.${this.profile ? ` ${openingPlan(this.profile) ?? ''}` : ''}`
           : 'The child is now standing in front of you. Say hello warmly (no filler words), say in one short sentence that you are an AI, and ask their name.',
         true,
       );
